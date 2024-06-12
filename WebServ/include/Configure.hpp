@@ -7,8 +7,8 @@
 
 // Separator
 # define NEWLINE '\n'
-# define BLOCK_OPEN '{'
-# define BLOCK_CLOSE '}'
+# define BLOCK_OPEN "{"
+# define BLOCK_CLOSE "}"
 
 // Server
 # define SERVER_BLOCK "server"
@@ -26,7 +26,7 @@
 # define AUTOINDEX "autoindex"
 # define AUTOINDEX_ON "yes"
 # define AUTOINDEX_OFF "no"
-# define CGI_COFIG "cgi"
+# define CGI_CONFIG "cgi"
 # define UPLOAD_PATH "upload_path"
 # define REDIRECTION "redirect"
 

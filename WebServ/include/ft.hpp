@@ -7,12 +7,13 @@
 
 # define WHITE_SPACE " \t\n\r\f\v"
 
-namespace Ft
+namespace ft
 {
 	std::string	trim(std::string & str);
-	std::vector<std::string> split(std::string & str);
-	std::vector<std::string> split(std::string & str, std::string & delim);
-int dectoi(std::string dec);
+	std::vector<std::string> split(std::string str);
+	std::vector<std::string> split(std::string str, std::string const & delim);
+	int toInt(std::string str, int unit);
+	std::string toString(ssize_t nbr, int unit);
 }
 
 #endif

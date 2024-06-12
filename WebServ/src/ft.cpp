@@ -1,4 +1,5 @@
 #include "ft.hpp"
+#include <iostream>
 
 std::string ft::trim(std::string & str)
 {
@@ -7,16 +8,16 @@ std::string ft::trim(std::string & str)
 	return str;
 }
 
-std::vector<std::string> ft::split(std::string & str)
+std::vector<std::string> ft::split(std::string str)
 {
 	return ft::split(str, WHITE_SPACE);
 }
 
-std::vector<std::string> ft::split(std::string & str, std::string & delim)
+std::vector<std::string> ft::split(std::string str, std::string const & delim)
 {
 	std::vector<std::string> ret;
 	str.erase(0, str.find_first_not_of(delim));
-	while (!str.empty)
+	while (!str.empty())
 	{
 		ret.push_back(str.substr(0, str.find_first_of(delim)));
 		str.erase(0, ret.back().size());
@@ -25,31 +26,60 @@ std::vector<std::string> ft::split(std::string & str, std::string & delim)
 	return ret;
 }
 
-int	ft::dectoi(std::string dec)
+int	ft::toInt(std::string str, int unit)
 {
 	long long	ret = 0;
+	std::string form = "0123456789abcdef";
 	int			minus = 1;
-	size_t		idx = 0;
+	size_t		pos;
 
-	ft::trim(dec);
-
-	while (dec[idx] && (dec[idx] == '-' || dec[idx] == '+')
-	{
-		if (dec[idx] == '-')
-			minus *= -1;
-		idx++;
-	}
-
-	while (dec[idx] && dec[idx] >= '0' && dec[idx] <= '9')
-	{
-		ret *= 10;
-		ret += (dec[idx] - '0') * minus;
-		if (ret < INT_MIN || ret > INT_MAX)
-			throw static_cast<int>(ret / 10);
-	}
-
-	if (idx != dec.size())
+	if (unit < 2 || 16 < unit)
 		throw static_cast<int>(ret);
+	form.resize(unit);
+	ft::trim(str);
 
+	while (!str.empty() 
+			&& (str.front() == '-' || str.front() == '+'))
+	{
+		if (str.front() == '-')
+			minus *= -1;
+		str.erase(0, 1);
+	}
+
+	while (!str.empty())
+	{
+		pos = form.find(str.front());
+		if (pos == std::string::npos)
+			throw static_cast<int>(ret);
+		str.erase(0, 1);
+		ret *= unit;
+		ret += pos * minus;
+		if (ret < INT_MIN || ret > INT_MAX)
+			throw static_cast<int>(ret / unit);
+	}
 	return static_cast<int>(ret);
+}
+
+std::string ft::toString(ssize_t nbr, int unit)
+{
+	std::string ret = "";
+	std::string sign = "";
+	std::string form = "0123456789abcef";
+	int minus = 1;
+
+	if (unit < 2 || 16 < unit)
+		return ret;
+	form.resize(unit);
+
+	if (nbr < 0)
+	{
+		sign = "-";
+		minus = -1;
+	}
+	while (nbr)
+	{
+		ret.insert(ret.begin(), form[nbr % unit * minus]);
+		nbr /= unit;
+	}
+	return sign + ret;
 }
