@@ -1,9 +1,9 @@
 #ifndef CONFIGURE_HPP
 # define CONFIGURE_HPP
 
-// Config Message
-# define CONFIG_START_MSG ""
-# define CONFIG_END_MSG ""
+// LOGGGER
+# define CONFIG_ACCESS_LOG "access_log"
+# define CONFIG_ERROR_LOG "error_log"
 
 // Separator
 # define NEWLINE '\n'

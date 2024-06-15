@@ -13,7 +13,7 @@ Response::~Response(void)
 
 }
 
-ResStat Response::getStatus(void)
+eResStat Response::getStatus(void)
 {
 	return this->mStatus;
 }

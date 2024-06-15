@@ -1,28 +1,26 @@
 .DEFAULT_GOAL := all
 CC = c++
 CFLAGS = -Wall -Wextra -Werror -std=c++98
-INC = include
+INC = ./include
 NAME = WebServ
-HEADER = $(INC)/Configure.hpp \
-		 $(INC)/Response.hpp \
-		 $(INC)/WebServ.hpp \
-		 $(INC)/Location.hpp \
-		 $(INC)/Server.hpp \
-		 $(INC)/ft.hpp
-SRC = src/Location.cpp	\
-	   src/Server.cpp \
-	   src/ft.cpp \
-	   src/Response.cpp	\
-	   src/WebServ.cpp \
-	   src/main.cpp
+BUILD = ./src
+TARGET = Location.cpp \
+	   Server.cpp \
+	   ft.cpp \
+	   Response.cpp	\
+	   WebServ.cpp \
+	   Logger.cpp \
+	   Kqueue.cpp \
+	   main.cpp
+SRC = $(TARGET:%=$(BUILD)/%) 
 OBJ = $(SRC:.cpp=.o)
 DEP = $(SRC:.cpp=.d)
--include $(DEP)
 
 .PHONY: all clean fclean re
 
-all: $(NAME)
+-include $(DEP)
 
+all: $(NAME)
 
 clean:
 	rm -f $(OBJ)
@@ -36,7 +34,6 @@ re: fclean
 
 $(NAME): $(OBJ)
 	$(CC) $(CFLAGS) -o $@ $^
-
 
 %.o: %.cpp
 	$(CC) $(CFLAGS) -MMD -MP -I$(INC) -c -o $@ $<

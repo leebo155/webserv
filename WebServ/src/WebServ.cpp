@@ -12,38 +12,131 @@ void WebServ::printAll(void)
 
 WebServ::WebServ(void)
 {
-}
-
-WebServ::WebServ(const std::string & config)
-{
-	this->configure(config);
+	this->createMIMEType();
 }
 
 WebServ::~WebServ(void)
 {
-	mServers.clear();
+	this->mServers.clear();
+	this->mPortGroup.clear();
+	this->mMIMEType.clear();
 }
 
-void WebServ::configure(const std::string & config)
+std::string WebServ::findMIMEType(std::string const & file) 
+{
+	size_t		pos = file.rfind('.');
+
+	if (pos == std::string::npos)
+		return "application/octet-stream";
+
+	std::string extension = file.substr(pos);
+	std::map<std::string, std::string>::iterator it = this->mMIMEType.find(extension);
+
+	if (it == this->mMIMEType.end()
+			|| it->first.size() == file.size())
+		return "application/octet-stream";
+
+	return it->second;
+}
+
+void WebServ::createMIMEType(void)
+{
+	this->mMIMEType[".aac"] = "audio/aac"; 
+	this->mMIMEType[".abw"] = "application/x-abiword"; 
+	this->mMIMEType[".apng"] = "image/apng";
+	this->mMIMEType[".arc"] = "application/x-freearc";
+	this->mMIMEType[".avif"] = "image/avif";
+	this->mMIMEType[".avi"] = "Avideo/x-msvideo";
+	this->mMIMEType[".azw"] = "application/vnd.amazon.ebook";
+	this->mMIMEType[".bin"] = "application/octet-stream";
+	this->mMIMEType[".bmp"] = "image/bmp";
+	this->mMIMEType[".bz"] = "application/x-bzip";
+	this->mMIMEType[".bz2"] = "application/x-bzip2";
+	this->mMIMEType[".cda"] = "application/x-cdf";
+	this->mMIMEType[".csh"] = "application/x-csh";
+	this->mMIMEType[".css"] = "text/css";
+	this->mMIMEType[".csv"] = "text/csv";
+	this->mMIMEType[".doc"] = "application/msword";
+	this->mMIMEType[".docx"] = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+	this->mMIMEType[".eot"] = "application/vnd.ms-fontobject";
+	this->mMIMEType[".epub"] = "application/epub+zip";
+	this->mMIMEType[".gz"] = "application/gzip";
+	this->mMIMEType[".gif"] = "image/gif";
+	this->mMIMEType[".htm"] = "text/html";
+	this->mMIMEType[".html"] = "text/html";
+	this->mMIMEType[".ico"] = "image/vnd.microsoft.icon";
+	this->mMIMEType[".ics"] = "text/calendar";
+	this->mMIMEType[".jar"] = "application/java-archive";
+	this->mMIMEType[".jpeg"] = "image/jpeg";
+	this->mMIMEType[".jpg"] = "image/jpeg";
+	this->mMIMEType[".js"] = "text/javascript"; 
+	this->mMIMEType[".json"] = "application/json"; 
+	this->mMIMEType[".jsonld"] = "application/ld+json";
+	this->mMIMEType[".mid"] = "audio/midi";
+	this->mMIMEType[".midi"] = "audio/midi";
+	this->mMIMEType[".mjs"] = "text/javascript";
+	this->mMIMEType[".mp3"] = "audio/mpeg";
+	this->mMIMEType[".mp4"] = "video/mp4";
+	this->mMIMEType[".mpeg"] = "video/mpeg";
+	this->mMIMEType[".mpkg"] = "application/vnd.apple.installer+xml";
+	this->mMIMEType[".odp"] = "application/vnd.oasis.opendocument.presentation";
+	this->mMIMEType[".ods"] = "application/vnd.oasis.opendocument.spreadsheet";
+	this->mMIMEType[".odt"] = "application/vnd.oasis.opendocument.text";
+	this->mMIMEType[".oga"] = "audio/ogg";
+	this->mMIMEType[".ogv"] = "video/ogg";
+	this->mMIMEType[".ogx"] = "application/ogg";
+	this->mMIMEType[".opus"] = "audio/opus";
+	this->mMIMEType[".otf"] = "font/otf";
+	this->mMIMEType[".png"] = "image/png";
+	this->mMIMEType[".pdf"] = "application/pdf";
+	this->mMIMEType[".php"] = "application/x-httpd-php";
+	this->mMIMEType[".ppt"] = "application/vnd.ms-powerpoint";
+	this->mMIMEType[".pptx"] = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+	this->mMIMEType[".rar"] = "application/vnd.rar";
+	this->mMIMEType[".rtf"] = "application/rtf";
+	this->mMIMEType[".sh"] = "application/x-sh";
+	this->mMIMEType[".svg"] = "image/svg+xml";
+	this->mMIMEType[".tar"] = "application/x-tar";
+	this->mMIMEType[".tif"] = "image/tiff";
+	this->mMIMEType[".tiff"] = "image/tiff";
+	this->mMIMEType[".ts"] = "video/mp2t";
+	this->mMIMEType[".ttf"] = "font/ttf";
+	this->mMIMEType[".txt"] = "text/plain";
+	this->mMIMEType[".vsd"] = "application/vnd.visio";
+	this->mMIMEType[".wav"] = "audio/wav";
+	this->mMIMEType[".weba"] = "audio/webm";
+	this->mMIMEType[".webm"] = "video/webm";
+	this->mMIMEType[".webp"] = "image/webp";
+	this->mMIMEType[".woff"] = "font/woff";
+	this->mMIMEType[".woff2"] = "font/woff2";
+	this->mMIMEType[".xhtml"] = "application/xhtml+xml";
+	this->mMIMEType[".xls"] = "application/vnd.ms-excel";
+	this->mMIMEType[".xlsx"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+	this->mMIMEType[".xml"] = "application/xml";
+	this->mMIMEType[".xul"] = "application/vnd.mozilla.xul+xml";
+	this->mMIMEType[".zip"] = "application/zip";
+	this->mMIMEType[".3gp"] = "video/3gpp";
+	this->mMIMEType[".3g2"] = "video/3gpp2";
+	this->mMIMEType[".7z"] = "application/x-7z-compressed";
+}
+
+void WebServ::configure(std::string const & config)
 {
 	std::ifstream	conf;
 	std::string		contents;
 
-//	mLogger.logAccess(CONFIG_START_MSG);
-	std::cout << "start configure" << std::endl;
-	
 	conf.open(config.c_str());
 	if (!conf.is_open())
-		throw std::runtime_error("Config file open() failed!");
+		throw std::runtime_error("Configuration open() failed!");
 
 	while (conf.good())
 		contents.push_back(conf.get());
-	contents.pop_back(); // Remove EOF
+	contents.pop_back(); 
 	
 	if (conf.bad())
 	{
 		conf.close();
-		throw std::runtime_error("Config file read() failed!");
+		throw std::runtime_error("Configuration read() failed!");
 	}
 
 	conf.close();
@@ -51,32 +144,61 @@ void WebServ::configure(const std::string & config)
 	try { 
 		this->validConfig(contents); 
 	} catch (size_t row) {
-		throw std::runtime_error("Config file validation failed! line: " + ft::toString(row, 10));
+		throw std::runtime_error("Configuration " + config + ":" + ft::toString(row, 10) + " not valid!");
 	}
 
 	this->parseConfig(contents);
+	this->listenServer();
+	this->mLogger.open();
+}
 
-//	mLogger.logAccess(CONFIG_END_MSG);
-	std::cout << "end configure" << std::endl;
+void WebServ::listenServer(void)
+{
+	for (size_t i = 0; i < this->mServers.size(); i++)
+	{
+		Server svr = this->mServers[i];
+		int port = svr.getPort();
+		std::map<int, std::vector<int> >::iterator group = this->mPortGroup.find(port);
+		if (group == this->mPortGroup.end())
+		{
+			this->mPortGroup[port] = std::vector<int>(1, i);
+			int svr_socket = socket(PF_INET, SOCK_STREAM, 0);
+			if (svr_socket == -1)
+				throw std::runtime_error("Server socket() failed!");
+			svr.setSocket(svr_socket);
+
+			struct sockaddr_in addr;
+			addr.sin_family = PF_INET;
+			addr.sin_port = htons(port);
+			addr.sin_addr.s_addr = htonl(INADDR_ANY);
+			if (bind(svr_socket, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr)) == -1)
+				throw std::runtime_error("Server bind() failed!");
+			if (listen(svr_socket, LISTEN_MAX) == -1)
+				throw std::runtime_error("Server listen() failed!");
+			if (fcntl(svr_socket, F_SETFL, O_NONBLOCK) == -1)
+				throw std::runtime_error("Server fcntl() failed!");
+			this->mKqueue.addEvent(svr_socket, nullptr);
+		}
+		else
+			group->second.push_back(i);
+	}
 }
 
 void WebServ::activate(char *envp[])
 {
-	std::cout << "========= start activate() =========" << std::endl;
+	this->mLogger.putAccess(ACTIVATE_RUN_MSG);
 	this->printAll();
+	
 	(void)envp;
-	std::cout << "========= end activate() =========" << std::endl;
+	this->mLogger.putAccess(ACTIVATE_DOWN_MSG);
 }
 
 
 
 void WebServ::validConfig(std::string contents)
 {
-	std::cout << "========= start validConfig() =========" << std::endl;
 	size_t	pos = 0;
 	size_t	rows = 0;
-	int		serverAmount = 0;
-	int		locationAmount = 0;
 	bool	serverFlag = false;
 	bool	locationFlag = false;
 	bool	portFlag = false;
@@ -98,22 +220,28 @@ void WebServ::validConfig(std::string contents)
 		if (pos == std::string::npos)
 			pos = contents.size();
 		
-		std::cout << "line: " << contents.substr(0, pos) << std::endl;
 		std::vector<std::string> line = 
 			ft::split(contents.substr(0, pos));
 		contents.erase(0, pos + 1);
 		
 		if (line.empty())
 			continue;
+		else if (line.front() == CONFIG_ACCESS_LOG
+				&& serverFlag == false
+				&& locationFlag == false
+				&& line.size() == 2)
+			continue;
+		else if (line.front() == CONFIG_ERROR_LOG
+				&& serverFlag == false
+				&& locationFlag == false
+				&& line.size() == 2)
+			continue;
 		else if (line.front() == SERVER_BLOCK
 				&& serverFlag == false
 				&& locationFlag == false
 				&& line.size() == 2
 				&& line.back() == BLOCK_OPEN)
-		{
 			serverFlag = true;
-			serverAmount++;
-		}
 		else if (line.front() == LISTEN_PORT
 				&& serverFlag == true
 				&& locationFlag == false
@@ -168,10 +296,7 @@ void WebServ::validConfig(std::string contents)
 				&& locationFlag == false
 				&& line.size() == 3
 				&& line.back() == BLOCK_OPEN)
-		{
-			locationAmount++;
 			locationFlag = true;
-		}
 		else if (line.front() == ALLOW_METHODS
 				&& locationFlag == true
 				&& allowMethodFlag == false)
@@ -225,15 +350,13 @@ void WebServ::validConfig(std::string contents)
 				&& locationFlag == false
 				&& line.size() == 1
 				&& portFlag == true
-				&& hostNameFlag == true
-				&& locationAmount > 0)
+				&& hostNameFlag == true)
 		{
 			serverFlag = false;
 			portFlag = false;
 			hostNameFlag = false;
 			serverNameFlag = false;
 			errPageFlag = false;
-			locationAmount = 0;
 		}
 		else if (line.front() == BLOCK_CLOSE
 				&& locationFlag == true
@@ -253,14 +376,10 @@ void WebServ::validConfig(std::string contents)
 		else
 			throw rows;
 	}
-	if (serverAmount == 0)
-		throw rows;
-	std::cout << "========= end validConfig() =========" << std::endl;
 }
 
 void	WebServ::parseConfig(std::string & contents)
 {
-	std::cout << "========= start parseConfig() =========" << std::endl;
 	size_t		pos = 0;
 	Location	*cur = NULL;
 	size_t		locationIdx = 0;
@@ -272,12 +391,15 @@ void	WebServ::parseConfig(std::string & contents)
 		if (pos == std::string::npos)
 			pos = contents.size();
 		
-		std::cout << "line: " << contents.substr(0, pos) << std::endl;
 		std::vector<std::string> line = 
 			ft::split(contents.substr(0, pos));
 		contents.erase(0, pos + 1);
 		if (line.empty())
 			continue;
+		else if (line.front() == CONFIG_ACCESS_LOG)
+			this->mLogger.setAccessLogFile(line.back());
+		else if (line.front() == CONFIG_ERROR_LOG)
+			this->mLogger.setErrorLogFile(line.back());
 		else if (line.front() == SERVER_BLOCK)
 			this->mServers.push_back(Server());
 		else if (line.front() == LISTEN_PORT)
@@ -287,7 +409,7 @@ void	WebServ::parseConfig(std::string & contents)
 		else if (line.front() == SERVER_NAME)
 			this->mServers.back().setServerName(line.back());
 		else if (line.front() == DEFAULT_ERROR)
-			this->mServers.back().setErrorPage(line.back(), "");
+			this->mServers.back().setErrorPage(line.back(), this->findMIMEType(line.back()));
 		else if (line.front() == LIMIT_BODY_SIZE)
 			this->mServers.back().setBodySize(line.back());
 		else if (line.front() == LOCATION_BLOCK)
@@ -330,5 +452,4 @@ void	WebServ::parseConfig(std::string & contents)
 				&& locationCloseFlag == false)
 			locationIdx = 0;
 	}
-	std::cout << "========= end parseConfig() =========" << std::endl;
 }
