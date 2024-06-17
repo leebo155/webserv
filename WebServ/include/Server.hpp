@@ -21,7 +21,11 @@ class Server
 		std::string mHost;
 		std::string mServerName;
 		Response mErrorPage;
+		std::string mErrorPage;
+		std::string mErrorPageType;
 		std::vector<Location> mLocation;
+		
+		std::string getDefaultError(int errocode, std::string const & errmsg);
 
 	public:
 		Server(void);
@@ -31,9 +35,11 @@ class Server
 
 		int	getPort(void);
 		int	getSocket(void);
+		std::string getHost(void);
 		std::string getServerName(void);
 		Location *getLocation(size_t idx);
 		size_t	getLocationSize(void);
+		Response getErrorPage(int errcode, std::String const & errmsg);
 
 		void setPort(int port);
 		void setSocket(int socket);

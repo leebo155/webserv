@@ -12,6 +12,7 @@ void WebServ::printAll(void)
 
 WebServ::WebServ(void)
 {
+	this->createResponseCodeMSG();
 	this->createMIMEType();
 }
 
@@ -19,6 +20,7 @@ WebServ::~WebServ(void)
 {
 	this->mServers.clear();
 	this->mPortGroup.clear();
+	this->mResponseCodeMSG.clear();
 	this->mMIMEType.clear();
 }
 
@@ -37,6 +39,34 @@ std::string WebServ::findMIMEType(std::string const & file)
 		return "application/octet-stream";
 
 	return it->second;
+}
+
+void WebServ::createResponseCodeMSG(void)
+{
+	this->mResponseCodeMSG[200] = "OK";
+	this->mResponseCodeMSG[301] = "Moved Permanently";
+	// 요구한 데이터를 변경된 URL에서 찾았음
+	this->mResponseCodeMSG[400] = "Bad Request";
+	// 요청 실패. 문법상 오류가 있어서 서버가 요청사항을 이해하지 못함
+	this->mResponseCodeMSG[403] = "Forbidden";
+	// 금지
+	this->mResponseCodeMSG[404] = "Not Found";
+	// 문서를 찾을 수 없음
+	this->mResponseCodeMSG[405] = "Method not allowed";
+	// 메서드 허용 안됨
+	this->mResponseCodeMSG[408] = "Request timeout";
+	// 요청 시간이 지남.
+	this->mResponseCodeMSG[411] = "Length Required";
+	// 요청 헤더에 Content-Length를 포함하지 않으면 서버가 처리할 수 없음
+	this->mResponseCodeMSG[413] = "Request entity too large";
+	// 요청된 문서가 현재 서버가 다룰 수 있는 크기보다 큼
+	this->mResponseCodeMSG[414] = "Request-URI too long";
+	// 요청한 URI가 너무 김
+	this->mResponseCodeMSG[415] = "Unsupported media type";	
+	// 요청이 알려지지 않은 형태
+	this->mResponseCodeMSG[500] = "Internal Server Error";
+	// 서버 내부 오류
+	this->mResponseCodeMSG[505] = "HTTP Version Not Supported";
 }
 
 void WebServ::createMIMEType(void)
@@ -165,6 +195,7 @@ void WebServ::listenServer(void)
 			int svr_socket = socket(PF_INET, SOCK_STREAM, 0);
 			if (svr_socket == -1)
 				throw std::runtime_error("Server socket() failed!");
+
 			svr.setSocket(svr_socket);
 
 			struct sockaddr_in addr;
@@ -173,10 +204,13 @@ void WebServ::listenServer(void)
 			addr.sin_addr.s_addr = htonl(INADDR_ANY);
 			if (bind(svr_socket, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr)) == -1)
 				throw std::runtime_error("Server bind() failed!");
+
 			if (listen(svr_socket, LISTEN_MAX) == -1)
 				throw std::runtime_error("Server listen() failed!");
+
 			if (fcntl(svr_socket, F_SETFL, O_NONBLOCK) == -1)
 				throw std::runtime_error("Server fcntl() failed!");
+
 			this->mKqueue.addEvent(svr_socket, nullptr);
 		}
 		else
@@ -184,13 +218,133 @@ void WebServ::listenServer(void)
 	}
 }
 
+Server *WebServ::findServer(int socket)
+{
+	for (size_t i = 0; i < this->mServers.size(); i++)
+	{
+		if (this->mServers[i].getSocket() == socket)
+			return &(this->mServers[i]);
+	}
+	return nullptr;
+}
+
+Server *WebServ::findServer(Connection *clt)
+{
+	Server *svr = clt->getServer();
+	if (svr != nullptr)
+		return svr;
+	
+	std::string host = clt->getHost();
+	if (host.empty())
+		return nullptr;
+	
+	std::map<int, std::vector<int> >::iterator it = this->mPortGroup.find(clt->getPort);
+	if (it == this->mPortGroup.end())
+		return nullptr;
+
+	for (size_t i = 0; i < it->second.size(); i++)
+	{
+		int idx = it->second[i];
+		if (this->mServers[idx].getHost() == host)
+			return &(this->mServers[idx]);
+	}
+	
+	return &(this->mServers[it->second.front()]);
+}
+
+void WebServ::closeConnection(Connection *clt)
+{
+	clt->close();
+	std::vector<Connection>::iterator it = find(this->mConnection.begin(), this->mConnection.end(), *clt);
+	if (it != this->mConnection.end())
+		erase(it);
+}
+
 void WebServ::activate(char *envp[])
 {
-	this->mLogger.putAccess(ACTIVATE_RUN_MSG);
 	this->printAll();
 	
-	(void)envp;
-	this->mLogger.putAccess(ACTIVATE_DOWN_MSG);
+	this->mKqueue.checkEvent();
+
+	while (true)
+	{
+		struct kevent *curEvent = this->mKqueue.getEvent();
+		if (curEvent == nullptr)
+			return ;
+		if (curEvent->udata == nullptr
+				&& (curEvent->flags & EV_ERROR))
+			throw std::runtime_error("");
+		try 
+		{
+			if (curEvent->udata == nullptr
+					&& (curEvent->flags & EVFILT_READ))
+			{
+				Server *svr = this->findServer(curEvent->ident);
+				int clt_socket = accept(svr->getSocket(), NULL, NULL);
+				if (clt_socket == -1)
+					throw std::runtime_error("");
+
+				if (fcntl(clt_socket, F_SETFL, O_NONBLOCK) == -1)
+					throw std::runtime_error("");
+
+				this->mConnection.push_back(Connection(clt_socket, svr->getPort()));
+				this->mKqueue.addEvent(clt_socket, &(this->mConnection.back()));
+			}
+			if (curEvent->udata != nullptr
+					&& (curEvent->flags & EV_ERROR))
+				throw std::runtime_error("");
+
+			if (curEvent->udata != nullptr
+					&& (curEvent->flags & EVFILT_READ))
+			{
+				Connection *clt = curEvent->udata;
+				clt->readRequest();
+				Server *svr = this->findServer(clt);
+				this->parseRequest(clt, svr);
+			}
+			if (curEvent->udata != nullptr
+					&& (curEvent->flags & EVFILT_WRITE))
+			{
+				Connection *clt = curEvent->udata;
+				clt->access();
+				clt->writeResponse();
+				if (clt->checkComplete())
+				{
+					this->mSender.send(clt->getResponse());
+					this->mLogger.putAccess("");
+					this->closeConnection(clt);
+				}
+			}
+		} 
+		catch (systemException & e)
+		{
+			Server *svr = this->findServer(curEvent->udata);
+			this->mSender.send(svr->getErrorPage(e.getCode(), this->mResponseCodeMSG[e.getCode()]));
+			this->mLogger.putError("");
+			this->closeConnection(curEvent->udata);
+		}
+		catch (std::exception & e)
+		{
+			this->mLogger.putError(e.what());
+			if (curEvent->udata != nullptr)
+				this->closeConnection(curEvent->udata);
+		}
+	}
+
+	std::vector<Connection>::iterator it = this->mConnection.begin();
+	while (it != this->mConnection.end())
+	{
+		if (it->checkOvertime())
+		{
+			Server *svr = this->findServer(curEvent->udata);
+			this->mSender.send(svr->getErrorPage(408, this->mResponseCodeMSG[408]));
+			this->mLogger.putAccess();
+			it->close();
+			it = this->mConnection.erase(it);
+		}
+		else
+			it++;
+	}	
 }
 
 

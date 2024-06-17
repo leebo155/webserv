@@ -10,11 +10,13 @@
 # include <sys/socket.h>
 # include <netinet/in.h>
 # include <fcntl.h>
+# include <algorithm>
 # include "ft.hpp"
 # include "Configure.hpp"
 # include "Server.hpp"
-//# include "Connection.hpp"
+# include "Connection.hpp"
 # include "Kqueue.hpp"
+# include "HTTPSender.hpp"
 # include "Logger.hpp"
 # include "Message.hpp"
 
@@ -28,9 +30,11 @@ class WebServ {
 	private:
 		std::vector<Server> mServers;
 		std::map<int, std::vector<int> > mPortGroup;
+		std::map<int, std::string> mResponseCodeMSG;
 		std::map<std::string, std::string> mMIMEType;
-//		std::vector<Connection> mConnection;
+		std::vector<Connection> mConnection;
 		Kqueue mKqueue;
+		HTTPSender mSender;
 		Logger mLogger;
 
 		void printAll(void);

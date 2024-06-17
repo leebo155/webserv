@@ -7,46 +7,6 @@ Server::Server(void)
 	this->mServerName = DEFAULT_SERVERNAME;
 	this->setBodySize(DEFAULT_BODY_SIZE);
 
-	std::string body = "<!DOCTYPE html>";
-	body += "\n<html lang=\"en\">";
-	body += "\n<head>";
-	body += "\n\t<meta charset=\"UTF-8\">";
-	body += "\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">";
-	body += "\n\t<title>";
-	body += DEFAULT_ERR_CODE; 
-	body += " ";
-	body += DEFAULT_ERR_MSG;
-	body += "</title>";
-	body += "\n\t<style>";
-	body += "\n\t\tbody {";
-	body += "\n\t\t\tbackground-color: #f8f8f8;";
-	body += "\n\t\t\tcolor: #333;";
-	body += "\n\t\t\tfont-family: Arial, sans-serif;";
-	body += "\n\t\t\ttext-align: center;";
-	body += "\n\t\t}";
-	body += "\n\t\th1 {";
-	body += "\n\t\t\tfont-size: 50px;";
-	body += "\n\t\t}";
-	body += "\n\t\tp {";
-	body += "\n\t\t\tfont-size: 20px;";
-	body += "\n\t\t}";
-	body += "\n\t</style>";
-	body += "\n</head>";
-	body += "\n<body>";
-	body += "\n\t<h1>";
-	body += DEFAULT_ERR_CODE;
-	body += " ";
-	body += DEFAULT_ERR_MSG;
-	body += "</h1>";
-	body += "\n\t<hr>";
-	body += "\n\t<p>";
-	body += DEFAULT_ERR_SERVERNAME;
-	body += "</p>";
-	body += "\n</body>";
-	body += "\n</html>";
-	this->mErrorPage.setBody(body);
-	this->mErrorPage.setContentType("text/html");
-	this->mErrorPage.setServerName(this->mServerName);
 }
 
 Server::~Server(void)
@@ -87,6 +47,11 @@ int	Server::getPort(void)
 int Server::getSocket(void)
 {
 	return this->mSocket;
+}
+
+std::string Server::getHost(void)
+{
+	return this->mHost;
 }
 
 std::string Server::getServerName(void)
@@ -146,29 +111,87 @@ void Server::setServerName(std::string const & servername)
 
 void Server::setErrorPage(std::string const & file, std::string const & type)
 {
-	std::ifstream errPage;
-	errPage.open(file.c_str());
-	
-	if (!errPage.is_open())
-		return ;
+	this->mErrorPage = file;
+	this->mErrorPageType = type;
+}
 
+Response Server::getErrorPage(int errcode, std::string const & errmsg)
+{
 	std::string body;
-	while (errPage.good())
-		body.push_back(errPage.get());
-	body.pop_back();
-	
-	if (errPage.bad())
-	{
-		errPage.close();
-		throw std::runtime_error("Error Page read() failed!");
-	}
-	errPage.close();
+	Response errorPage;
+	errorPage.setServerName(this->mServerName);
 
-	this->mErrorPage.setBody(body);
-	this->mErrorPage.setContentType(type);
+	try {
+		if (this->mErrorPage.empty())
+			throw ;
+		std::ifstream errPage;
+		errPage.open(this->mErrorPage.c_str());
+		if (!errPage.is_open())
+			throw ;
+		while (errPage.good())
+			body.push_back(errPage.get());
+		body.pop_back();
+		if (errPage.bad())
+		{
+			errPage.close();
+			throw ;
+		}
+		errPage.close();
+		errorPage.setContentType(this->mErrorPageType);
+	} catch (...) {
+		body = this->getDefaultError(errcode, errmsg);
+		errorPage.setContentType("text/html");
+	}
+
+	errorPage.setBody(body);
+	return errorPage;
 }
 
 void Server::addEmptyLocation(void)
 {
 	this->mLocation.push_back(Location());
+}
+
+std::string Server::getDefaultError(int errcode, std::string const & errmsg)
+{
+	std::string error_code = ft::toString(errcode);
+	std::string body = "<!DOCTYPE html>";
+	body += "\n<html lang=\"en\">";
+	body += "\n<head>";
+	body += "\n\t<meta charset=\"UTF-8\">";
+	body += "\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">";
+	body += "\n\t<title>";
+	body += error_code;
+	body += " ";
+	body += errmsg;
+	body += "</title>";
+	body += "\n\t<style>";
+	body += "\n\t\tbody {";
+	body += "\n\t\t\tbackground-color: #f8f8f8;";
+	body += "\n\t\t\tcolor: #333;";
+	body += "\n\t\t\tfont-family: Arial, sans-serif;";
+	body += "\n\t\t\ttext-align: center;";
+	body += "\n\t\t}";
+	body += "\n\t\th1 {";
+	body += "\n\t\t\tfont-size: 50px;";
+	body += "\n\t\t}";
+	body += "\n\t\tp {";
+	body += "\n\t\t\tfont-size: 20px;";
+	body += "\n\t\t}";
+	body += "\n\t</style>";
+	body += "\n</head>";
+	body += "\n<body>";
+	body += "\n\t<h1>";
+	body += error_code;
+	body += " ";
+	body += errmsg;
+	body += "</h1>";
+	body += "\n\t<hr>";
+	body += "\n\t<p>";
+	body += this->mServerName;
+	body += "</p>";
+	body += "\n</body>";
+	body += "\n</html>";
+
+	return body;
 }
