@@ -13,9 +13,9 @@ Response::~Response(void)
 
 }
 
-eResStat Response::getStatus(void)
+eResAccessStatus Response::getAccessStatus(void)
 {
-	return this->mStatus;
+	return this->mAccessStatus;
 }
 
 std::string Response::getCode(void)

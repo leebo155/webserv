@@ -8,7 +8,7 @@
 # define DEFAULT_ERR_MSG "WEBSERV_STATUS_MSG"
 # define DEFAULT_ERR_SERVERNAME "WEBSERV_SERVER_NAME"
 
-enum eResStat
+enum eResAccessStatus
 {
 	READY,
 	FINISH,
@@ -17,7 +17,7 @@ enum eResStat
 class Response
 {
 	private:
-		eResStat mStatus;
+		eResAccessStatus mAccessStatus;
 		std::string mCode;
 		std::string mStatusMsg;
 		bool mConnectionHeader;
@@ -30,7 +30,7 @@ class Response
 	public:
 		Response(void);
 		~Response(void);
-		eResStat getStatus(void);
+		eResAccessStatus getAccessStatus(void);
 		std::string getCode(void);
 		std::string getStatusMsg(void);
 		bool getConnectionHeader(void);

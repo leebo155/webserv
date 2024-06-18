@@ -300,7 +300,7 @@ void WebServ::activate(char *envp[])
 				Connection *clt = curEvent->udata;
 				clt->readRequest();
 				Server *svr = this->findServer(clt);
-				this->parseRequest(clt, svr);
+				clt->validRequest(svr);
 			}
 			if (curEvent->udata != nullptr
 					&& (curEvent->flags & EVFILT_WRITE))
@@ -316,7 +316,7 @@ void WebServ::activate(char *envp[])
 				}
 			}
 		} 
-		catch (systemException & e)
+		catch (connectionException & e)
 		{
 			Server *svr = this->findServer(curEvent->udata);
 			this->mSender.send(svr->getErrorPage(e.getCode(), this->mResponseCodeMSG[e.getCode()]));
